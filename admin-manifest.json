@@ -1,0 +1,38 @@
+{
+  "name": "Hotel City Park — Admin Panel",
+  "short_name": "CP Admin",
+  "description": "Property Management System — Hotel City Park, Solapur",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0d1b2a",
+  "theme_color": "#c9a96e",
+  "categories": ["business", "productivity"],
+  "icons": [
+    {
+      "src": "app-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "app-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "View Bookings",
+      "url": "./inquiries.html",
+      "description": "Open room bookings"
+    },
+    {
+      "name": "View Messages",
+      "url": "./messages.html",
+      "description": "Open contact messages"
+    }
+  ]
+}
