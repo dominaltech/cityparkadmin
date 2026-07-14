@@ -516,6 +516,27 @@ tbody tr:hover { background: var(--row-hover); }
 </head>
 <body>
 
+<!-- FULLSCREEN LOCK OVERLAY -->
+<div id="ownerLockScreen" style="display: none; position: fixed; inset: 0; background: rgba(243, 244, 246, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 999999; align-items: center; justify-content: center; padding: 20px;">
+  <div class="card" style="width: 100%; max-width: 400px; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); text-align: center; border: 1px solid var(--border); padding: 40px 32px;">
+    <div style="background: var(--gold-dim); width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: var(--gold);">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 32px; height: 32px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </div>
+    <h3 style="font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 400; color: var(--text); margin-bottom: 8px;">Owner's <em>Authentication</em></h3>
+    <p style="font-size: 0.84rem; color: var(--muted); margin-bottom: 28px; line-height: 1.5;">Access to this settings panel is restricted. Please authenticate to continue.</p>
+    <div style="display: flex; flex-direction: column; gap: 16px; text-align: left; margin-bottom: 24px;">
+      <div class="modal-field" style="display: flex; flex-direction: column; gap: 6px;">
+        <label style="font-size: 0.68rem; letter-spacing: 0.2em; font-weight: 600; text-transform: uppercase;">Password</label>
+        <input id="ownerLockPassword" type="password" placeholder="••••••••" style="border-radius: 4px; padding: 12px; border: 1px solid var(--border); background: var(--white); width: 100%; box-sizing: border-box;" onkeydown="if(event.key==='Enter') verifyLockPassword()">
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <button class="btn btn-gold" onclick="verifyLockPassword()" style="width: 100%; justify-content: center; border-radius: 4px; font-weight: 600; padding: 12px;">Unlock Settings</button>
+      <button class="btn btn-ghost" onclick="window.location.href='index.html'" style="width: 100%; justify-content: center; border-radius: 4px; padding: 12px;">Return to Dashboard</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════════════════════ APP ═══════════════════════════ -->
 <div id="app">
 
@@ -569,6 +590,11 @@ tbody tr:hover { background: var(--row-hover); }
       <button class="nav-item" onclick="showPage('gallery',this)">
         <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
         Gallery
+      </button>
+      <div class="nav-section-label">Owner</div>
+      <button class="nav-item" id="nav-owner" onclick="clickOwnerTab(this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Owner's Tab
       </button>
     </nav>
     <div class="sidebar-footer">
@@ -653,7 +679,7 @@ tbody tr:hover { background: var(--row-hover); }
         <div class="table-wrap">
           <table>
             <thead><tr>
-              <th>#</th><th>Guest Details</th><th>Room Type</th><th>Check-in</th><th>Check-out</th><th>Guests</th><th>Amount</th><th>Status</th><th>Actions</th>
+              <th>#</th><th>Guest Details</th><th>Phone</th><th>Room Type</th><th>Check-in</th><th>Check-out</th><th>Guests</th><th>Amount</th><th>Status</th><th>Actions</th>
             </tr></thead>
             <tbody id="bookingsTable"></tbody>
           </table>
@@ -684,7 +710,7 @@ tbody tr:hover { background: var(--row-hover); }
         <div class="table-wrap">
           <table>
             <thead><tr>
-              <th>#</th><th>Guest Details</th><th>Room Type</th><th>Check-in</th><th>Check-out</th><th>Guests</th><th>Amount</th><th>Status</th><th>Actions</th>
+              <th>#</th><th>Guest Details</th><th>Phone</th><th>Room Type</th><th>Check-in</th><th>Check-out</th><th>Guests</th><th>Amount</th><th>Status</th><th>Actions</th>
             </tr></thead>
             <tbody id="bookedRoomsTable"></tbody>
           </table>
@@ -717,7 +743,7 @@ tbody tr:hover { background: var(--row-hover); }
         <div class="table-wrap">
           <table>
             <thead><tr>
-              <th>#</th><th>Organiser</th><th>Event Type</th><th>Hall</th><th>Date</th><th>Attendees</th><th>Status</th><th>Actions</th>
+              <th>#</th><th>Organiser</th><th>Phone</th><th>Event Type</th><th>Hall</th><th>Date</th><th>Attendees</th><th>Status</th><th>Actions</th>
             </tr></thead>
             <tbody id="confTable"></tbody>
           </table>
@@ -767,6 +793,36 @@ tbody tr:hover { background: var(--row-hover); }
           </button>
         </div>
         <div class="rooms-mgmt-grid" id="galleryGrid"></div>
+      </div>
+
+      <!-- ════ OWNER'S TAB ════ -->
+      <div class="page" id="page-owner">
+        <div class="section-hdr">
+          <h2>Owner's <em>Settings</em></h2>
+        </div>
+        <div class="two-col" style="grid-template-columns: 1fr; max-width: 600px;">
+          <div class="card" style="border-radius: 8px;">
+            <div class="card-title">Change <em>Password</em></div>
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+              <p style="font-size: 0.88rem; color: var(--muted); line-height: 1.5;">
+                Update the administrative password used to unlock pricing features for Rooms and Banquets.
+              </p>
+              <div class="modal-field" style="display: flex; flex-direction: column; gap: 6px;">
+                <label style="font-size: 0.72rem; letter-spacing: 0.15em; font-weight: 600;">New Password</label>
+                <input id="ownerNewPassword" type="password" placeholder="Enter new password" style="border-radius: 4px; padding: 12px;">
+              </div>
+              <div class="modal-field" style="display: flex; flex-direction: column; gap: 6px;">
+                <label style="font-size: 0.72rem; letter-spacing: 0.15em; font-weight: 600;">Confirm New Password</label>
+                <input id="ownerConfirmPassword" type="password" placeholder="Confirm new password" style="border-radius: 4px; padding: 12px;">
+              </div>
+              <div style="margin-top: 10px;">
+                <button class="btn btn-gold" onclick="saveOwnerPassword()" style="border-radius: 4px; padding: 10px 24px; font-weight: 600;">
+                  Update Password
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
     </div><!-- /content -->
@@ -978,6 +1034,25 @@ tbody tr:hover { background: var(--row-hover); }
   </div>
 </div>
 
+<!-- Unlock Owner Tab Modal -->
+<div class="modal-backdrop" id="modal-unlockOwnerTab" onclick="closeModalOutside(event,'modal-unlockOwnerTab')">
+  <div class="modal-box" style="max-width: 420px; border-radius: 8px;">
+    <button class="modal-close" onclick="closeModal('modal-unlockOwnerTab')">✕</button>
+    <h3>Owner's <em>Authentication</em></h3>
+    <p class="modal-sub">Please enter the existing password to access this section.</p>
+    <div style="display: flex; flex-direction: column; gap: 16px; margin-top: 8px;">
+      <div class="modal-field" style="display: flex; flex-direction: column; gap: 6px;">
+        <label style="font-size: 0.72rem; letter-spacing: 0.15em; font-weight: 600;">Existing Password</label>
+        <input id="ownerVerifyPassword" type="password" placeholder="••••••••" style="border-radius: 4px; padding: 12px;" onkeydown="if(event.key==='Enter') verifyOwnerPassword()">
+      </div>
+    </div>
+    <div class="modal-actions" style="margin-top: 24px;">
+      <button class="btn btn-ghost" onclick="closeModal('modal-unlockOwnerTab')" style="border-radius: 4px;">Cancel</button>
+      <button class="btn btn-gold" onclick="verifyOwnerPassword()" style="border-radius: 4px; font-weight: 600;">Verify & Open</button>
+    </div>
+  </div>
+</div>
+
 <!-- Message View Modal -->
 <div class="modal-backdrop" id="modal-viewMsg" onclick="closeModalOutside(event,'modal-viewMsg')">
   <div class="modal-box">
@@ -1048,6 +1123,8 @@ let gallery = load('gallery');
 let _sbRooms = [];
 let _sbGallery = [];
 let _sbBanquets = [];
+window._adminPassword = 'jmg';
+window._adminPasswordRecordId = null;
 
 // ── SUPABASE LOADER ──
 async function loadFromSupabase() {
@@ -1077,9 +1154,19 @@ async function loadFromSupabase() {
     let sbConference = [];
 
     if (data && data.length) {
-      // Map contact inquiries → messages array
+      // Find admin password record
+      const pwdRecord = data.find(inq => inq.inquiry_type === 'contact' && inq.enquiry_category === 'admin_password');
+      if (pwdRecord) {
+        window._adminPassword = pwdRecord.message;
+        window._adminPasswordRecordId = pwdRecord.id;
+      } else {
+        window._adminPassword = 'jmg';
+        window._adminPasswordRecordId = null;
+      }
+
+      // Map contact inquiries → messages array (excluding password record)
       sbMessages = data
-        .filter(inq => inq.inquiry_type === 'contact')
+        .filter(inq => inq.inquiry_type === 'contact' && inq.enquiry_category !== 'admin_password')
         .map(inq => ({
           id: 'sb_' + inq.id,
           name: (inq.first_name + ' ' + (inq.last_name || '')).trim(),
@@ -1275,13 +1362,19 @@ async function initApp() {
     'messages.html': 'messages',
     'rooms.html': 'rooms',
     'gallery.html': 'gallery',
-    'banquets.html': 'banquets'
+    'banquets.html': 'banquets',
+    'owner.html': 'owner'
   };
   const activePageId = pageFileMap[currentFile] || 'dashboard';
 
   await loadFromSupabase();
   await loadRoomsFromSupabase();
   await loadBanquetsFromSupabase();
+  
+  if (activePageId === 'owner' && sessionStorage.getItem('owner_unlocked') !== 'true') {
+    const lockScreen = document.getElementById('ownerLockScreen');
+    if (lockScreen) lockScreen.style.display = 'flex';
+  }
   
   // Call showPage for the current page to ensure the correct view is shown
   showPage(activePageId);
@@ -1459,7 +1552,7 @@ async function initPWA() {
 }
 
 // ═══════════════ NAV ═══════════════
-const pageTitles = { dashboard:'Dashboard', bookings:'Inquiry for Room', booked_rooms:'Booked Rooms', conference:'Conference Enquiries', messages:'Contact Messages', rooms:'Room Management', gallery:'Gallery Management', banquets:'Banquet Management' };
+const pageTitles = { dashboard:'Dashboard', bookings:'Inquiry for Room', booked_rooms:'Booked Rooms', conference:'Conference Enquiries', messages:'Contact Messages', rooms:'Room Management', gallery:'Gallery Management', banquets:'Banquet Management', owner:"Owner's Settings" };
 function showPage(id, btn) {
   const pageFileMap = {
     dashboard: 'index.html',
@@ -1469,7 +1562,8 @@ function showPage(id, btn) {
     messages: 'messages.html',
     rooms: 'rooms.html',
     gallery: 'gallery.html',
-    banquets: 'banquets.html'
+    banquets: 'banquets.html',
+    owner: 'owner.html'
   };
   const targetFile = pageFileMap[id];
   const currentPath = window.location.pathname;
@@ -1490,7 +1584,7 @@ function showPage(id, btn) {
   let sidebarBtn = btn;
   if (!sidebarBtn) {
     sidebarBtn = [...document.querySelectorAll('.nav-item')]
-      .find(el => el.getAttribute('onclick') && el.getAttribute('onclick').includes("'"+id+"'"));
+      .find(el => el.getAttribute('onclick') && (el.getAttribute('onclick').includes("'"+id+"'") || el.getAttribute('onclick').includes(id)));
   }
   if (sidebarBtn && sidebarBtn.classList) sidebarBtn.classList.add('active');
   
@@ -1506,12 +1600,118 @@ function showPage(id, btn) {
   if(id==='rooms') loadRoomsFromSupabase();
   if(id==='gallery') loadGalleryFromSupabase();
   if(id==='banquets') loadBanquetsFromSupabase();
+  if(id==='owner') loadFromSupabase();
 }
 // navTo — safely navigate to a page and highlight the matching sidebar button
 function navTo(id) {
   const btn = [...document.querySelectorAll('.nav-item')]
-    .find(el => el.getAttribute('onclick') && el.getAttribute('onclick').includes("'"+id+"'"));
+    .find(el => el.getAttribute('onclick') && (el.getAttribute('onclick').includes("'"+id+"'") || el.getAttribute('onclick').includes(id)));
   showPage(id, btn || null);
+}
+
+function clickOwnerTab(btn) {
+  if (sessionStorage.getItem('owner_unlocked') === 'true') {
+    showPage('owner', btn);
+  } else {
+    // Clear field and open verification modal
+    const input = document.getElementById('ownerVerifyPassword');
+    if (input) input.value = '';
+    openModal('unlockOwnerTab');
+  }
+}
+
+function verifyOwnerPassword() {
+  const input = document.getElementById('ownerVerifyPassword');
+  if (!input) return;
+  const pwd = input.value;
+  const currentPassword = window._adminPassword || 'jmg';
+  
+  if (pwd === currentPassword) {
+    sessionStorage.setItem('owner_unlocked', 'true');
+    closeModal('unlockOwnerTab');
+    showPage('owner');
+  } else {
+    showToast('Incorrect password!', 'red');
+  }
+}
+
+function verifyLockPassword() {
+  const input = document.getElementById('ownerLockPassword');
+  if (!input) return;
+  const pwd = input.value;
+  const currentPassword = window._adminPassword || 'jmg';
+  
+  if (pwd === currentPassword) {
+    sessionStorage.setItem('owner_unlocked', 'true');
+    const lockScreen = document.getElementById('ownerLockScreen');
+    if (lockScreen) lockScreen.style.display = 'none';
+    showPage('owner');
+    showToast('Authenticated successfully!', 'gold');
+  } else {
+    showToast('Incorrect password!', 'red');
+  }
+}
+
+async function saveOwnerPassword() {
+  const newPwd = document.getElementById('ownerNewPassword').value.trim();
+  const confirmPwd = document.getElementById('ownerConfirmPassword').value.trim();
+  
+  if (!newPwd) {
+    showToast('Please enter a new password.', 'red');
+    return;
+  }
+  if (newPwd !== confirmPwd) {
+    showToast('New passwords do not match.', 'red');
+    return;
+  }
+  
+  const saveBtn = document.querySelector('#page-owner .btn-gold');
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Updating...';
+  }
+  
+  try {
+    const payload = {
+      first_name: 'AdminPassword',
+      last_name: 'Config',
+      email: 'admin@citypark.com',
+      phone: '12345',
+      message: newPwd,
+      inquiry_type: 'contact',
+      enquiry_category: 'admin_password',
+      status: 'New'
+    };
+    
+    if (window._adminPasswordRecordId) {
+      const { error } = await _supabase
+        .from('inquiries')
+        .update(payload)
+        .eq('id', window._adminPasswordRecordId);
+      if (error) throw error;
+    } else {
+      const { error } = await _supabase
+        .from('inquiries')
+        .insert([payload]);
+      if (error) throw error;
+    }
+    
+    window._adminPassword = newPwd;
+    showToast('Password updated successfully!', 'gold');
+    document.getElementById('ownerNewPassword').value = '';
+    document.getElementById('ownerConfirmPassword').value = '';
+    
+    // Reload database data to update record ID
+    await loadFromSupabase();
+  } catch (err) {
+    console.error('Password save error:', err);
+    showToast('Failed to save password: ' + (err.message || 'error'), 'red');
+  } finally {
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Update Password';
+    }
+  }
 }
 function openSidebar() {
   const s = document.getElementById('sidebar');
@@ -1815,7 +2015,7 @@ function renderBookings() {
   });
   const tbody = document.getElementById('bookingsTable');
   if(!tbody) return;
-  if(!data.length) { tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--muted)">No inquiries found.</td></tr>`; return; }
+  if(!data.length) { tbody.innerHTML=`<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--muted)">No inquiries found.</td></tr>`; return; }
   tbody.innerHTML = data.map(b => {
     const displayStatus = computeBookingStatus(b);
     
@@ -1835,8 +2035,8 @@ function renderBookings() {
       <td>
         <div class="td-bold">${b.fname} ${b.lname}</div>
         <div class="td-muted">${b.email}</div>
-        <div class="td-muted" style="font-size:0.75rem">${b.phone || ''}</div>
       </td>
+      <td>${b.phone || ''}</td>
       <td>${b.room}</td>
       <td>
         <div>${fmtDate(b.checkin)}</div>
@@ -1876,7 +2076,7 @@ function renderBookedRooms() {
   });
   const tbody = document.getElementById('bookedRoomsTable');
   if(!tbody) return;
-  if(!data.length) { tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--muted)">No bookings found.</td></tr>`; return; }
+  if(!data.length) { tbody.innerHTML=`<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--muted)">No bookings found.</td></tr>`; return; }
   tbody.innerHTML = data.map(b => {
     const displayStatus = computeBookingStatus(b);
     
@@ -1896,8 +2096,8 @@ function renderBookedRooms() {
       <td>
         <div class="td-bold">${b.fname} ${b.lname}</div>
         <div class="td-muted">${b.email}</div>
-        <div class="td-muted" style="font-size:0.75rem">${b.phone || ''}</div>
       </td>
+      <td>${b.phone || ''}</td>
       <td>${b.room}</td>
       <td>
         <div>${fmtDate(b.checkin)}</div>
@@ -2051,7 +2251,7 @@ async function saveBooking() {
         const seqStr = String(nextSeq).padStart(4, '0');
         const monthStr = String(currentMonth + 1).padStart(2, '0');
         const dateStr = `${currentYear}${monthStr}${String(now.getDate()).padStart(2, '0')}`;
-        finalInqNumber = `INQ-${dateStr}-RM-${seqStr}`;
+        finalInqNumber = `INQR-${dateStr}-${seqStr}`;
       }
     } catch (err) {
       console.warn(err);
@@ -2060,7 +2260,7 @@ async function saveBooking() {
       const now = new Date();
       const seqStr = String(Math.floor(1000 + Math.random() * 9000));
       const dateStr = now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0');
-      finalInqNumber = `INQ-${dateStr}-RM-${seqStr}`;
+      finalInqNumber = `INQR-${dateStr}-${seqStr}`;
     }
     payload.inquiry_number = finalInqNumber;
   }
@@ -2120,11 +2320,15 @@ function renderConference() {
     return match && (!f || c.status === f);
   });
   const tbody = document.getElementById('confTable');
-  if(!data.length) { tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted)">No enquiries found.</td></tr>`; return; }
-  tbody.innerHTML = data.map(c=>`
+  if(!data.length) { tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--muted)">No enquiries found.</td></tr>`; return; }
+  tbody.innerHTML = data.map(c=>{
+    const cleanId = String(c.id).replace('sb_', '');
+    const idDisplay = c.inquiry_number ? `<div style="font-weight:600;color:var(--gold);font-size:.78rem">${c.inquiry_number}</div>` : `<div class="td-muted" style="font-size:.7rem">#${cleanId}</div>`;
+    return `
     <tr>
-      <td>${c.inquiry_number ? `<div style="font-weight:600;color:var(--gold);font-size:.78rem">${c.inquiry_number}</div>` : ''}<div class="td-muted" style="font-size:.7rem">#${c.id}</div></td>
+      <td>${idDisplay}</td>
       <td><div class="td-bold">${c.name}</div><div class="td-muted">${c.org}</div></td>
+      <td>${c.phone || ''}</td>
       <td>${c.type}</td>
       <td>${c.hall}</td>
       <td>${fmtDate(c.date)}</td>
@@ -2136,7 +2340,7 @@ function renderConference() {
           <button class="btn btn-danger btn-sm" onclick="deleteConf('${c.id}')">Delete</button>
         </div>
       </td>
-    </tr>`).join('');
+    </tr>`}).join('');
 }
 
 function editConf(id) {
@@ -2220,7 +2424,7 @@ async function saveConference() {
         const seqStr = String(nextSeq).padStart(4, '0');
         const monthStr = String(currentMonth + 1).padStart(2, '0');
         const dateStr = `${currentYear}${monthStr}${String(now.getDate()).padStart(2, '0')}`;
-        finalInqNumber = `INQ-${dateStr}-HL-${seqStr}`;
+        finalInqNumber = `INQB-${dateStr}-${seqStr}`;
       }
     } catch (err) {
       console.warn(err);
@@ -2229,7 +2433,7 @@ async function saveConference() {
       const now = new Date();
       const seqStr = String(Math.floor(1000 + Math.random() * 9000));
       const dateStr = now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0');
-      finalInqNumber = `INQ-${dateStr}-HL-${seqStr}`;
+      finalInqNumber = `INQB-${dateStr}-${seqStr}`;
     }
     payload.inquiry_number = finalInqNumber;
   }
@@ -2994,7 +3198,7 @@ function closeModalOutside(e, id) {
 }
 function unlockPricing(type) {
   const pwd = prompt("Enter password to unlock pricing:");
-  if (pwd === 'jmg') {
+  if (pwd === (window._adminPassword || 'jmg')) {
     if (type === 'room') {
       ['rPrice', 'rPriceDouble', 'rPriceTriple', 'rPriceExtra', 'rPriceChild'].forEach(id => {
         const el = document.getElementById(id);
