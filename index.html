@@ -1221,7 +1221,7 @@ async function loadFromSupabase() {
           date: inq.event_date,
           attendees: inq.attendees || 0,
           duration: inq.event_duration || 'Full Day',
-          status: inq.status || 'New',
+          status: (inq.status === 'Pending' || !inq.status) ? 'New' : inq.status,
           notes: inq.message || '',
           inquiry_number: inq.inquiry_number,
           _from_supabase: true,
@@ -1367,17 +1367,17 @@ async function initApp() {
   };
   const activePageId = pageFileMap[currentFile] || 'dashboard';
 
-  await loadFromSupabase();
-  await loadRoomsFromSupabase();
-  await loadBanquetsFromSupabase();
-  
   if (activePageId === 'owner' && sessionStorage.getItem('owner_unlocked') !== 'true') {
     const lockScreen = document.getElementById('ownerLockScreen');
     if (lockScreen) lockScreen.style.display = 'flex';
   }
   
-  // Call showPage for the current page to ensure the correct view is shown
+  // Call showPage for the current page immediately to prevent dashboard flashing
   showPage(activePageId);
+
+  await loadFromSupabase();
+  await loadRoomsFromSupabase();
+  await loadBanquetsFromSupabase();
   renderBadges();
   subscribeRealtime();
   // Set initial count for polling detection
@@ -1733,7 +1733,7 @@ function renderBadges() {
     const s = computeBookingStatus(b);
     return s === 'Confirmed' || s === 'Checked In';
   }).length;
-  const newConf = conference.filter(c=>c.status==='New').length;
+  const newConf = conference.filter(c=>c.status==='New' || c.status==='Pending').length;
   const unread = messages.filter(m=>!m.read).length;
   const bb = document.getElementById('bookingBadge');
   const brb = document.getElementById('bookedRoomsBadge');
@@ -2492,7 +2492,7 @@ function renderMessages() {
   if(uc) uc.textContent = unread + ' unread';
   const el = document.getElementById('messagesList');
   if(!messages.length){ el.innerHTML='<div class="empty-state"><p>No messages yet.</p></div>'; return; }
-  el.innerHTML = [...messages].reverse().map(m=>`
+  el.innerHTML = [...messages].map(m=>`
     <div class="msg-card ${m.read?'read':'unread'}" onclick="viewMsg('${m.id}')">
       <div class="msg-header">
         <span class="msg-name">${m.name} ${!m.read?'<span class="badge badge-yellow" style="font-size:.58rem;padding:2px 7px">New</span>':''}</span>
