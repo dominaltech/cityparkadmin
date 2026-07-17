@@ -3,7 +3,7 @@
    Handles: Push Notifications · Offline Cache · Notification Clicks
 ═══════════════════════════════════════════════════════════════════ */
 
-const CACHE_NAME = 'citypark-admin-v3';
+const CACHE_NAME = 'citypark-admin-v4';
 const CACHE_ASSETS = [
   './index.html',
   './inquiries.html',
